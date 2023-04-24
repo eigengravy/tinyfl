@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "tinyfl"
+version = "0.1.0"
+description = ""
+authors = ["Sarang S <email.sarangs@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = "1.13.0"
+torchvision = "0.14.0"
+fastapi = "^0.95.1"
+uvicorn = {extras = ["standard"], version = "^0.21.1"}
+httpx = "^0.24.0"
+
+[tool.poetry.scripts]
+party = "tinyfl.party:main"
+agg = "tinyfl.aggregator:main"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+psrecord = "^1.2"
+matplotlib = "^3.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
