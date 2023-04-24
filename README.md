@@ -15,7 +15,7 @@ a tiny federated learning framework built with pytorch and fastapi.
 
 use poetry
 
-```
+```sh
 poetry env use 3.10
 poetry install
 ```
@@ -24,7 +24,7 @@ or
 
 use conda
 
-```
+```sh
 conda create -n tinyfl python=3.10.10
 conda activate tinyfl
 pip install torch==1.13.0 torchvision==0.14.0 httpx uvicorn fastapi
@@ -34,26 +34,26 @@ pip install torch==1.13.0 torchvision==0.14.0 httpx uvicorn fastapi
 
 run the aggregator
 
-```
-poetry run agg agg.config.json
+```sh
+poetry run agg config/agg.config.json
 ```
 
 run the parties
 
-```
-poetry run party party0.config.json
-poetry run party party1.config.json
-poetry run party party2.config.json
+```sh
+poetry run party config/party0.config.json
+poetry run party config/party1.config.json
+poetry run party config/party2.config.json
 ```
 
 get aggregator status
 
-```
+```sh
 curl {aggregator}/
 ```
 
 start training round
 
-```
+```sh
 curl {aggregator}/start_round
 ```
