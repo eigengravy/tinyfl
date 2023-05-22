@@ -36,10 +36,10 @@ def multikrum_scorer(weights):
                             for key in keys
                         ]
                     )
-                    for j in range(len(weights))
+                    for j in range(R)
                     if j != i
                 ]
             )[:closest_updates]
         )
-        for i in range(len(weights))
+        for i in range(R)
     ]
