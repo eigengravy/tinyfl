@@ -11,7 +11,7 @@ import asyncio
 import httpx
 import logging
 
-from tinyfl.model import avg_models, create_model, test_model
+from tinyfl.model import fedavg_models, create_model, test_model
 from tinyfl.message import Register, StartRound, SubmitWeights
 
 host: str
@@ -104,7 +104,7 @@ def state_manager():
             return
         else:
             logger.info("Quorum achieved!")
-            model.load_state_dict(avg_models(client_models))
+            model.load_state_dict(fedavg_models(client_models))
             logger.info("Aggregated model")
             accuracy, loss = test_model(model)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")

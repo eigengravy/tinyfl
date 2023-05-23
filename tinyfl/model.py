@@ -62,15 +62,6 @@ def train_model(model, epochs: int):
             optimizer.step()
 
 
-def avg_models(weights):
-    avg = copy.deepcopy(weights[0])
-    for i in range(1, len(weights)):
-        for key in avg:
-            avg[key] += weights[i][key]
-        avg[key] = torch.div(avg[key], len(weights))
-    return avg
-
-
 def test_model(model):
     size = len(testloader.dataset)
     batches = len(testloader)
@@ -85,3 +76,12 @@ def test_model(model):
     test_loss /= batches
     correct /= size
     return 100 * correct, test_loss
+
+
+def fedavg_models(weights):
+    avg = copy.deepcopy(weights[0])
+    for i in range(1, len(weights)):
+        for key in avg:
+            avg[key] += weights[i][key]
+        avg[key] = torch.div(avg[key], len(weights))
+    return avg
