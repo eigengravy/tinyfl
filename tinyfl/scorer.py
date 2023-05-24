@@ -36,7 +36,9 @@ def multikrum_scorer(weights):
                 [
                     sum(
                         [
-                            np.linalg.norm(weights[i][key] - weights[j][key])
+                            np.linalg.norm(
+                                weights[i][key].cpu() - weights[j][key].cpu()
+                            )
                             for key in keys
                         ]
                     )
