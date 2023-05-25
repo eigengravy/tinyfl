@@ -22,7 +22,9 @@ testset = datasets.FashionMNIST(
 )
 testloader = DataLoader(testset, batch_size=batch_size)
 
-
+# Nueral netwrok model for the image classification
+# flatten: flattens the input tensor
+# layers: equential layers of the model
 class Model(nn.Module):
     def __init__(self) -> None:
         super(Model, self).__init__()
@@ -36,18 +38,21 @@ class Model(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 10),
         )
-
+    # Foward pass of model
+    # Args: x: Input tensor
+    # Returns Output tensor
     def forward(self, x):
         x = self.flatten(x)
         x = self.layers(x)
         return x
 
-
+# Creates instance of the model
+# Returns intsance model
 def create_model() -> Model:
     model = Model().to(device)
     return model
 
-
+# Trains the model, Args: model: model being trained, epochs: number of training epochs
 def train_model(model, epochs: int):
     global trainloader
     optimizer = torch.optim.Adam(model.parameters())
@@ -61,7 +66,8 @@ def train_model(model, epochs: int):
             loss.backward()
             optimizer.step()
 
-
+# Tests the model, Args: Model
+# Returns accuracy and loss
 def test_model(model):
     size = len(testloader.dataset)
     batches = len(testloader)
@@ -77,7 +83,8 @@ def test_model(model):
     correct /= size
     return 100 * correct, test_loss
 
-
+# Averages all the weights from multiple clients
+# Returns the averages weights
 def fedavg_models(weights):
     avg = copy.deepcopy(weights[0])
     for i in range(1, len(weights)):

@@ -49,7 +49,7 @@ epochs = 3
 quorum = threading.Condition()
 client_models = []
 
-
+# Generates the message ID, Returns the next message ID.
 def next_msg_id() -> int:
     global msg_id
     ack_id = msg_id
@@ -59,7 +59,7 @@ def next_msg_id() -> int:
 
 app = FastAPI()
 
-
+# Handles a GET request to root end point, Returns the response message
 @app.get("/")
 async def ping():
     return {
@@ -70,13 +70,15 @@ async def ping():
         "clients": clients,
     }
 
-
+# Handles a GET request to start New round, takes args backround tasks for starting a new round
+# Returns a respose message
 @app.get("/start_round")
 async def start_round(background_tasks: BackgroundTasks):
     background_tasks.add_task(state_manager)
     return {"success": True}
 
-
+# Handles a POST request to the root endpoint, takes args request, and background tasks for handling
+# requests, Returns a response message
 @app.post("/")
 async def handle(req: Request, background_tasks: BackgroundTasks):
     msg = pickle.loads(await req.body())
@@ -91,7 +93,8 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case _:
             return {"success": False, "message": "Unknown message"}
 
-
+# Manages the state of the learning porcess, waits for quorum of clients weights, 
+# aggregates the models and then tests the aggregated models
 def state_manager():
     r = asyncio.run(start_training())
     quorum_achieved: bool
@@ -109,7 +112,7 @@ def state_manager():
             accuracy, loss = test_model(model)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 
-
+# Starts the training process by sending the start round message, returns a list of responsees from the clients
 async def start_training():
     global round_id
     round_id += 1
@@ -134,7 +137,8 @@ async def start_training():
             ]
         )
 
-
+# Collects the weights submitted by a client and add them to the list of clieeent models
+# Args weights submitted by ther client
 async def collect_weights(weights: Mapping[str, Any]):
     with round_lock:
         with quorum:
@@ -145,6 +149,6 @@ async def collect_weights(weights: Mapping[str, Any]):
                 logger.info("Quorum notified")
                 quorum.notify()
 
-
+# Main, starts the server
 def main():
     uvicorn.run(app, port=int(port), host=host)
