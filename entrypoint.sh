@@ -3,16 +3,20 @@ if [[ -z $CLIENT ]]; then
     echo "CLIENT environment variable not set"
     exit 1
 fi
-if [[ $CLIENT -eq -1 ]]; then
+if [[ -z $TINYFL_CONFIG ]]; then
+    echo "TINYFL_CONFIG environment variable not set"
+    exit 1
+fi
+if [[ $CLIENT -eq 0 ]]; then
     echo "Starting server"
-    poetry run agg configs/agg.config.json
+    poetry run agg $TINYFL_CONFIG
     exit 0
-elif [[ $CLIENT -ge 0 && $CLIENT -le 2 ]]; then
+elif [[ $CLIENT -eq 1 ]]; then
     echo "Starting client $CLIENT"
-    poetry run party configs/party$(echo $CLIENT).config.json
+    poetry run party $TINYFL_CONFIG 
     exit 0
 else 
-    echo "CLIENT environment variable must be -1, 0, 1, or 2"
+    echo "CLIENT environment variable must be 0 or 1"
     exit 1
 fi
 
