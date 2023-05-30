@@ -29,6 +29,15 @@ conda create -n tinyfl python=3.10.10
 conda activate tinyfl
 pip install torch==1.13.0 torchvision==0.14.0 httpx uvicorn fastapi
 ```
+or use docker 
+```sh
+docker build -t tinyfl .
+docker run --name agg network=host -e CLIENT=-1 tinyfl:latest
+docker run --name party0 network=host -e CLIENT=0 tinyfl:latest
+docker run --name party1 network=host -e CLIENT=1 tinyfl:latest
+docker run --name party2 network=host -e CLIENT=2 tinyfl:latest
+```
+
 
 ## quickstart
 
