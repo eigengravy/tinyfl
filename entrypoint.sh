@@ -8,15 +8,14 @@ if [[ -z $TINYFL_CONFIG ]]; then
     exit 1
 fi
 if [[ $CLIENT -eq 0 ]]; then
-    echo "Starting server"
+    echo "Starting aggregator"
     poetry run agg $TINYFL_CONFIG
     exit 0
 elif [[ $CLIENT -eq 1 ]]; then
-    echo "Starting client $CLIENT"
-    poetry run party $TINYFL_CONFIG 
+    echo "Starting party"
+    poetry run party $TINYFL_CONFIG
     exit 0
-else 
+else
     echo "CLIENT environment variable must be 0 or 1"
     exit 1
 fi
-
