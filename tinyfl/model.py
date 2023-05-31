@@ -1,8 +1,12 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
 import copy
+from collections import defaultdict
+from random import shuffle
+from typing import List
+
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 batch_size = 64
@@ -85,3 +89,28 @@ def fedavg_models(weights):
             avg[key] += weights[i][key]
         avg[key] = torch.div(avg[key], len(weights))
     return avg
+
+
+def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
+    def partition_list(l, n):
+        indices = list(range(len(l)))
+        shuffle(indices)
+        index_partitions = [sorted(indices[i::n]) for i in range(n)]
+        return [[l[i] for i in index_partition] for index_partition in index_partitions]
+
+    labels = dataset.targets.tolist()
+    indices_per_label = defaultdict(list)
+    for idx, label in enumerate(labels):
+        indices_per_label[label].append(idx)
+
+    indices_split = [[] for _ in range(num_parties)]
+
+    for label, indices in indices_per_label.items():
+        for i, subset in enumerate(partition_list(indices, num_parties)):
+            indices_split[i].extend(subset)
+
+    return indices_split
+
+
+def subset_from_indices(dataset: Dataset, indices: List[int]) -> Subset:
+    return Subset(dataset=dataset, indices=indices)
