@@ -1,5 +1,8 @@
 import copy
+from typing import List
 from fastapi import BackgroundTasks, FastAPI, Request
+from torch.utils.data import DataLoader, Dataset, Subset
+from torchvision import datasets, transforms
 import uvicorn
 import sys
 import json
@@ -8,8 +11,24 @@ import logging
 import httpx
 import pickle
 
-from tinyfl.model import create_model, test_model, train_model
+from tinyfl.model import create_model, test_model, train_model, subset_from_indices
 from tinyfl.message import Register, StartRound, SubmitWeights
+
+batch_size = 64
+trainset = datasets.FashionMNIST(
+    root="data",
+    train=True,
+    download=True,
+    transform=transforms.ToTensor(),
+)
+
+testset = datasets.FashionMNIST(
+    root="data",
+    train=False,
+    download=True,
+    transform=transforms.ToTensor(),
+)
+testloader = DataLoader(testset, batch_size=batch_size)
 
 host: str
 port: int
@@ -57,21 +76,24 @@ async def ping():
 async def handle(req: Request, background_tasks: BackgroundTasks):
     msg = pickle.loads(await req.body())
     match msg:
-        case StartRound(round=round, epochs=epochs, weights=weights):
-            background_tasks.add_task(run_training, weights, epochs, round_id)
+        case StartRound(round=round, epochs=epochs, weights=weights, indices=indices):
+            background_tasks.add_task(run_training, weights, epochs, round_id, indices)
             return {"success": True, "message": f"Starting round {round_id}"}
         case _:
             return {"success": False, "message": "Unknown message"}
 
 
-def run_training(weights, epochs: int, round: int):
+def run_training(weights, epochs: int, round: int, indices: List[int]):
     global round_id
     round_id = round
 
     model.load_state_dict(weights)
 
+    train_subset = subset_from_indices(trainset, indices)
+    trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
+
     logger.info("Training started")
-    train_model(model=model, epochs=epochs)
+    train_model(model=model, epochs=epochs, trainloader=trainloader)
     logger.info("Training ended")
 
     r = httpx.post(
@@ -90,7 +112,7 @@ def run_training(weights, epochs: int, round: int):
 
 
 def run_testing():
-    accuracy, loss = test_model(model)
+    accuracy, loss = test_model(model, testloader)
     logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 
 
