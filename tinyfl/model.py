@@ -106,7 +106,9 @@ def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[in
     indices_split = [[] for _ in range(num_parties)]
 
     for label, indices in indices_per_label.items():
-        for i, subset in enumerate(partition_list(indices, num_parties)):
+        partitioned_indices = partition_list(indices, num_parties)
+        shuffle(partitioned_indices)
+        for i, subset in enumerate(partitioned_indices):
             indices_split[i].extend(subset)
 
     return indices_split
