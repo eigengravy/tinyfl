@@ -1,7 +1,7 @@
 import copy
 import pickle
 import threading
-from typing import Any, List, Mapping
+from typing import Any, Mapping
 from fastapi import BackgroundTasks, FastAPI, Request
 import sys
 import json
@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 client_lock = threading.Lock()
-clients: List[str] = []
+clients = set()
 
 
 with open(sys.argv[1]) as f:
@@ -83,7 +83,7 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
     match msg:
         case Register(url=url):
             with client_lock:
-                clients.append(url)
+                clients.add(url)
             return {"success": True, "message": "Registered"}
         case SubmitWeights(round=round, weights=weights):
             background_tasks.add_task(collect_weights, copy.deepcopy(weights))
