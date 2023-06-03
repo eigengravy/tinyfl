@@ -3,6 +3,8 @@ import pickle
 import threading
 from typing import Any, Mapping
 from fastapi import BackgroundTasks, FastAPI, Request
+from torch.utils.data import DataLoader, Dataset, Subset
+from torchvision import datasets, transforms
 import sys
 import json
 from operator import itemgetter
@@ -11,8 +13,30 @@ import asyncio
 import httpx
 import logging
 
-from tinyfl.model import fedavg_models, create_model, test_model
+from tinyfl.model import (
+    fedavg_models,
+    create_model,
+    test_model,
+    stratified_split_dataset,
+)
 from tinyfl.message import Register, StartRound, SubmitWeights
+
+batch_size = 64
+
+trainset = datasets.FashionMNIST(
+    root="data",
+    train=True,
+    download=True,
+    transform=transforms.ToTensor(),
+)
+
+testset = datasets.FashionMNIST(
+    root="data",
+    train=False,
+    download=True,
+    transform=transforms.ToTensor(),
+)
+testloader = DataLoader(testset, batch_size=batch_size)
 
 host: str
 port: int
@@ -93,7 +117,9 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
 
 
 def state_manager():
-    r = asyncio.run(start_training())
+    global client_models
+    client_models = []
+    asyncio.run(start_training())
     quorum_achieved: bool
     with quorum:
         logger.info("Waiting for quorum")
@@ -106,7 +132,7 @@ def state_manager():
             logger.info("Quorum achieved!")
             model.load_state_dict(fedavg_models(client_models))
             logger.info("Aggregated model")
-            accuracy, loss = test_model(model)
+            accuracy, loss = test_model(model, testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 
 
@@ -115,6 +141,7 @@ async def start_training():
     round_id += 1
 
     curr_weights = copy.deepcopy(model.state_dict())
+    client_indices = stratified_split_dataset(trainset, len(clients))
 
     async with httpx.AsyncClient() as client:
         return await asyncio.gather(
@@ -127,10 +154,11 @@ async def start_training():
                             round=round_id,
                             epochs=epochs,
                             weights=curr_weights,
+                            indices=indices,
                         )
                     ),
                 )
-                for party in clients
+                for party, indices in zip(clients, client_indices)
             ]
         )
 
@@ -138,10 +166,9 @@ async def start_training():
 async def collect_weights(weights: Mapping[str, Any]):
     with round_lock:
         with quorum:
-            client_models.append(weights)
-            logger.info("Appended weights")
-
-            if len(client_models) >= consensus:
+            if len(client_models) == consensus:
+                client_models.append(weights)
+                logger.info("Appended weights")
                 logger.info("Quorum notified")
                 quorum.notify()
 

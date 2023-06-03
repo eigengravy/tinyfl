@@ -2,22 +2,22 @@ from tinyfl.model import create_model, test_model
 import numpy as np
 
 
-def _compute_accuracy(weight):
+def _compute_accuracy(weight, testloader):
     model = create_model()
     model.load_state_dict(weight)
-    return test_model(model)[0]
+    return test_model(model, testloader)[0]
 
 
-def accuracy_scorer(weights):
-    return [_compute_accuracy(weight) for weight in weights]
+def accuracy_scorer(weights, testloader):
+    return [_compute_accuracy(weight, testloader) for weight in weights]
 
 
-def marginal_gain_scorer(weights, prev_scores):
+def marginal_gain_scorer(weights, prev_scores, testloader):
     assert len(weights) == len(prev_scores)
     return [
         max(a - b, 0)
         for a, b in zip(
-            [_compute_accuracy(weight) for weight in weights],
+            [_compute_accuracy(weight, testloader) for weight in weights],
             prev_scores,
         )
     ]

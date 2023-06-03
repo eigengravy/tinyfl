@@ -33,15 +33,15 @@ pip install torch==1.13.0 torchvision==0.14.0 httpx uvicorn fastapi
 run the aggregator
 
 ```sh
-poetry run agg config/agg.config.json
+poetry run agg configs/agg.config.json
 ```
 
 run the parties
 
 ```sh
-poetry run party config/party0.config.json
-poetry run party config/party1.config.json
-poetry run party config/party2.config.json
+poetry run party configs/party0.config.json
+poetry run party configs/party1.config.json
+poetry run party configs/party2.config.json
 ```
 
 get aggregator status

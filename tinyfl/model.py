@@ -1,30 +1,12 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset, Subset
-from torchvision import datasets, transforms
+from torch.utils.data import Dataset, Subset, DataLoader
 import copy
 from collections import defaultdict
 from random import shuffle
-from typing import List
-
+from typing import List, Tuple
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-batch_size = 64
-trainset = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-trainloader = DataLoader(trainset, num_workers=4, batch_size=batch_size)
-
-testset = datasets.FashionMNIST(
-    root="data",
-    train=False,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-testloader = DataLoader(testset, batch_size=batch_size)
 
 
 class Model(nn.Module):
@@ -52,8 +34,7 @@ def create_model() -> Model:
     return model
 
 
-def train_model(model, epochs: int):
-    global trainloader
+def train_model(model: Model, epochs: int, trainloader: DataLoader):
     optimizer = torch.optim.Adam(model.parameters())
     for _ in range(epochs):
         model.train()
@@ -66,7 +47,7 @@ def train_model(model, epochs: int):
             optimizer.step()
 
 
-def test_model(model):
+def test_model(model: Model, testloader: DataLoader) -> Tuple[float, float]:
     size = len(testloader.dataset)
     batches = len(testloader)
     model.eval()

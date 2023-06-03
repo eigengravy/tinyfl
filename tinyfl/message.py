@@ -17,6 +17,7 @@ class StartRound(Message):
     round: int
     epochs: int
     weights: Mapping[str, Any]
+    indices: List[int]
 
 
 @dataclass
