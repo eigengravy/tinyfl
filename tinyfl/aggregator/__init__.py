@@ -117,7 +117,9 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
 
 
 def state_manager():
-    r = asyncio.run(start_training())
+    global client_models
+    client_models = []
+    asyncio.run(start_training())
     quorum_achieved: bool
     with quorum:
         logger.info("Waiting for quorum")
@@ -164,10 +166,9 @@ async def start_training():
 async def collect_weights(weights: Mapping[str, Any]):
     with round_lock:
         with quorum:
-            client_models.append(weights)
-            logger.info("Appended weights")
-
-            if len(client_models) >= consensus:
+            if len(client_models) == consensus:
+                client_models.append(weights)
+                logger.info("Appended weights")
                 logger.info("Quorum notified")
                 quorum.notify()
 
