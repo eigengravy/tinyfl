@@ -71,6 +71,8 @@ timeout = 1000
 epochs = 3
 
 quorum = threading.Condition()
+
+clients_models_lock = threading.Lock()
 client_models = []
 
 
@@ -118,7 +120,8 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
 
 def state_manager():
     global client_models
-    client_models = []
+    with clients_models_lock:
+        client_models = []
     asyncio.run(start_training())
     quorum_achieved: bool
     with quorum:
@@ -130,7 +133,8 @@ def state_manager():
             return
         else:
             logger.info("Quorum achieved!")
-            model.load_state_dict(fedavg_models(client_models))
+            with clients_models_lock:
+                model.load_state_dict(fedavg_models(client_models))
             logger.info("Aggregated model")
             accuracy, loss = test_model(model, testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
@@ -166,11 +170,14 @@ async def start_training():
 async def collect_weights(weights: Mapping[str, Any]):
     with round_lock:
         with quorum:
-            if len(client_models) == consensus:
-                client_models.append(weights)
-                logger.info("Appended weights")
-                logger.info("Quorum notified")
-                quorum.notify()
+            with clients_models_lock:
+                notify_quorum = False
+                if len(client_models) < consensus:
+                    client_models.append(weights)
+                    logger.info("Appended weights")
+                    notify_quorum = len(client_models) == consensus
+                if notify_quorum:
+                    quorum.notify()
 
 
 def main():
