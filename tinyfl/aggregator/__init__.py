@@ -14,10 +14,10 @@ import httpx
 import logging
 
 from tinyfl.model import (
-    fedavg_models,
     create_model,
     test_model,
     stratified_split_dataset,
+    models
 )
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
@@ -55,6 +55,17 @@ clients = set()
 with open(sys.argv[1]) as f:
     config = json.load(f)
     host, port = itemgetter("host", "port")(config)
+    consensus, timeout, epochs = itemgetter("consensus", "timeout", "epochs")(config)
+    aggregation_model = itemgetter("aggregation_model")(config)
+    if models.get(aggregation_model) is None:
+        raise ValueError("Invalid aggregation model")
+    aggregation_model = models[aggregation_model]
+
+logger.info(f"{host}:{port} loaded from config.")
+logger.info(f"Consensus: {consensus}")
+logger.info(f"Timeout: {timeout}")
+logger.info(f"Epochs: {epochs}")
+logger.info(f"Aggregation model: {aggregation_model.__name__}")
 
 msg_id = 0
 
@@ -66,9 +77,9 @@ model = create_model()
 
 me = f"http://{host}:{port}"
 
-consensus = 2
-timeout = 1000
-epochs = 3
+# consensus = 2
+# timeout = 1000
+# epochs = 3
 
 quorum = threading.Condition()
 
@@ -140,7 +151,7 @@ def state_manager():
         else:
             logger.info("Quorum achieved!")
             with clients_models_lock:
-                model.load_state_dict(fedavg_models(client_models))
+                model.load_state_dict(aggregation_model(client_models))
             logger.info("Aggregated model")
             accuracy, loss = test_model(model, testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
