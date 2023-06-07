@@ -23,3 +23,8 @@ class StartRound(Message):
 class SubmitWeights(Message):
     round: int
     weights: Mapping[str, Any]
+
+
+@dataclass
+class DeRegister(Message):
+    url: str

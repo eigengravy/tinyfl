@@ -12,7 +12,7 @@ import httpx
 import logging
 
 from tinyfl.model import fedavg_models, create_model, test_model
-from tinyfl.message import Register, StartRound, SubmitWeights
+from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 host: str
 port: int
@@ -84,10 +84,16 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case Register(url=url):
             with client_lock:
                 clients.add(url)
+            logger.info("Client registered")
             return {"success": True, "message": "Registered"}
         case SubmitWeights(round=round, weights=weights):
             background_tasks.add_task(collect_weights, copy.deepcopy(weights))
             return {"success": True, "message": "Weights submitted"}
+        case DeRegister(url=url):
+            with client_lock:
+                clients.remove(url)
+            logger.info("Client de-registered")
+            return {"success": True, "message": "De-registered"}
         case _:
             return {"success": False, "message": "Unknown message"}
 

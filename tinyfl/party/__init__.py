@@ -1,5 +1,6 @@
 import copy
 from fastapi import BackgroundTasks, FastAPI, Request
+from contextlib import asynccontextmanager
 import uvicorn
 import sys
 import json
@@ -9,7 +10,7 @@ import httpx
 import pickle
 
 from tinyfl.model import create_model, test_model, train_model
-from tinyfl.message import Register, StartRound, SubmitWeights
+from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 host: str
 port: int
@@ -45,7 +46,23 @@ logger.info("Model initialized.")
 
 r = httpx.post(aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me)))
 
-app = FastAPI()
+
+async def shutdown():
+    logger.info("Shutting down")
+    r = httpx.post(
+        aggregator, data=pickle.dumps(DeRegister(msg_id=next_msg_id(), url=me))
+    )
+    if r.status_code == 200:
+        logger.info("Shutdown complete")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
