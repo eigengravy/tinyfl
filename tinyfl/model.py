@@ -1,26 +1,12 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+from torch.utils.data import Dataset, Subset, DataLoader
 import copy
+from collections import defaultdict
+from random import shuffle
+from typing import List, Tuple
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-batch_size = 64
-trainset = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-trainloader = DataLoader(trainset, num_workers=4, batch_size=batch_size)
-
-testset = datasets.FashionMNIST(
-    root="data",
-    train=False,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-testloader = DataLoader(testset, batch_size=batch_size)
 
 
 class Model(nn.Module):
@@ -48,8 +34,7 @@ def create_model() -> Model:
     return model
 
 
-def train_model(model, epochs: int):
-    global trainloader
+def train_model(model: Model, epochs: int, trainloader: DataLoader):
     optimizer = torch.optim.Adam(model.parameters())
     for _ in range(epochs):
         model.train()
@@ -62,7 +47,7 @@ def train_model(model, epochs: int):
             optimizer.step()
 
 
-def test_model(model):
+def test_model(model: Model, testloader: DataLoader) -> Tuple[float, float]:
     size = len(testloader.dataset)
     batches = len(testloader)
     model.eval()
@@ -85,3 +70,30 @@ def fedavg_models(weights):
             avg[key] += weights[i][key]
         avg[key] = torch.div(avg[key], len(weights))
     return avg
+
+
+def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
+    def partition_list(l, n):
+        indices = list(range(len(l)))
+        shuffle(indices)
+        index_partitions = [sorted(indices[i::n]) for i in range(n)]
+        return [[l[i] for i in index_partition] for index_partition in index_partitions]
+
+    labels = dataset.targets.tolist()
+    indices_per_label = defaultdict(list)
+    for idx, label in enumerate(labels):
+        indices_per_label[label].append(idx)
+
+    indices_split = [[] for _ in range(num_parties)]
+
+    for label, indices in indices_per_label.items():
+        partitioned_indices = partition_list(indices, num_parties)
+        shuffle(partitioned_indices)
+        for i, subset in enumerate(partitioned_indices):
+            indices_split[i].extend(subset)
+
+    return indices_split
+
+
+def subset_from_indices(dataset: Dataset, indices: List[int]) -> Subset:
+    return Subset(dataset=dataset, indices=indices)
