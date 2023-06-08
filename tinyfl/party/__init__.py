@@ -64,22 +64,18 @@ def next_msg_id() -> int:
 logger.info("Model initialized.")
 
 r = httpx.post(aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me)))
+    
 
 
-async def shutdown():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
     logger.info("Shutting down")
     r = httpx.post(
         aggregator, data=pickle.dumps(DeRegister(msg_id=next_msg_id(), url=me))
     )
     if r.status_code == 200:
         logger.info("Shutdown complete")
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    yield
-    await shutdown()
-
 
 app = FastAPI(lifespan=lifespan)
 
