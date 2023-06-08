@@ -110,7 +110,7 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case Register(url=url):
             with client_lock:
                 clients.add(url)
-            logger.info("Client registered")
+            logger.info(f"Client {url} registered")
             return {"success": True, "message": "Registered"}
         case SubmitWeights(round=round, weights=weights):
             background_tasks.add_task(collect_weights, copy.deepcopy(weights))
@@ -118,7 +118,7 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case DeRegister(url=url):
             with client_lock:
                 clients.remove(url)
-            logger.info("Client de-registered")
+            logger.info(f"Client {url} de-registered")
             return {"success": True, "message": "De-registered"}
         case _:
             return {"success": False, "message": "Unknown message"}
