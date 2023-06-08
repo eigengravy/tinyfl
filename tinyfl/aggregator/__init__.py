@@ -77,9 +77,6 @@ model = create_model()
 
 me = f"http://{host}:{port}"
 
-# consensus = 2
-# timeout = 1000
-# epochs = 3
 
 quorum = threading.Condition()
 
