@@ -17,7 +17,7 @@ from tinyfl.model import (
     create_model,
     test_model,
     stratified_split_dataset,
-    models
+    strategy
 )
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
@@ -57,9 +57,9 @@ with open(sys.argv[1]) as f:
     host, port = itemgetter("host", "port")(config)
     consensus, timeout, epochs = itemgetter("consensus", "timeout", "epochs")(config)
     aggregation_model = itemgetter("aggregation_model")(config)
-    if models.get(aggregation_model) is None:
+    if strategy.get(aggregation_model) is None:
         raise ValueError("Invalid aggregation model")
-    aggregation_model = models[aggregation_model]
+    aggregation_model = strategy[aggregation_model]
 
 logger.info(f"{host}:{port} loaded from config.")
 logger.info(f"Consensus: {consensus}")

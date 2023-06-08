@@ -72,7 +72,7 @@ def fedavg_models(weights):
     return avg
 
 
-models = {
+strategy = {
     "fedavg": fedavg_models,
 }
 
