@@ -20,7 +20,9 @@ poetry env use 3.10
 poetry install
 ```
 
-or use conda
+or
+
+use conda
 
 ```sh
 conda create -n tinyfl python=3.10.10

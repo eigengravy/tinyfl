@@ -1,7 +1,8 @@
 import copy
 from typing import List
 from fastapi import BackgroundTasks, FastAPI, Request
-from torch.utils.data import DataLoader, Dataset, Subset
+from contextlib import asynccontextmanager
+from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import uvicorn
 import sys
@@ -12,7 +13,7 @@ import httpx
 import pickle
 
 from tinyfl.model import create_model, test_model, train_model, subset_from_indices
-from tinyfl.message import Register, StartRound, SubmitWeights
+from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
 trainset = datasets.FashionMNIST(
@@ -60,11 +61,22 @@ def next_msg_id() -> int:
     return ack_id
 
 
-logger.info("Model initialized.")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Model initialized.")
+    r = httpx.post(
+        aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me))
+    )
+    yield
+    logger.info("Shutting down")
+    r = httpx.post(
+        aggregator, data=pickle.dumps(DeRegister(msg_id=next_msg_id(), url=me))
+    )
+    if r.status_code == 200:
+        logger.info("Shutdown complete")
 
-r = httpx.post(aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me)))
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")

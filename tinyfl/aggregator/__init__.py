@@ -19,7 +19,7 @@ from tinyfl.model import (
     test_model,
     stratified_split_dataset,
 )
-from tinyfl.message import Register, StartRound, SubmitWeights
+from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
 
@@ -110,10 +110,16 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case Register(url=url):
             with client_lock:
                 clients.add(url)
+            logger.info(f"Client {url} registered")
             return {"success": True, "message": "Registered"}
         case SubmitWeights(round=round, weights=weights):
             background_tasks.add_task(collect_weights, copy.deepcopy(weights))
             return {"success": True, "message": "Weights submitted"}
+        case DeRegister(url=url):
+            with client_lock:
+                clients.remove(url)
+            logger.info(f"Client {url} de-registered")
+            return {"success": True, "message": "De-registered"}
         case _:
             return {"success": False, "message": "Unknown message"}
 
