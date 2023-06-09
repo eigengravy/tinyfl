@@ -72,6 +72,11 @@ def fedavg_models(weights):
     return avg
 
 
+strategy = {
+    "fedavg": fedavg_models,
+}
+
+
 def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
     def partition_list(l, n):
         indices = list(range(len(l)))
