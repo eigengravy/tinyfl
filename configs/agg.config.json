@@ -4,5 +4,5 @@
   "consensus": 2,
   "timeout": 1000,
   "epochs": 3,
-  "aggregation_model": "fedavg"
+  "strategy": "fedavg"
 }
