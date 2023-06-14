@@ -23,7 +23,7 @@ class Model(nn.Module):
             nn.Linear(128, 10),
         )
 
-    def forward(self, x):
+    def forward(self, x: DataLoader)-> DataLoader:
         x = self.flatten(x)
         x = self.layers(x)
         return x
@@ -63,7 +63,7 @@ def test_model(model: Model, testloader: DataLoader) -> Tuple[float, float]:
     return 100 * correct, test_loss
 
 
-def fedavg_models(weights):
+def fedavg_models(weights: list[dict])-> dict: 
     avg = copy.deepcopy(weights[0])
     for i in range(1, len(weights)):
         for key in avg:
@@ -78,6 +78,16 @@ strategies = {
 
 
 def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
+    """Splits dataset among parties for local models to be trained upon
+
+    Args:
+        dataset: Dataset for the models to be trained on
+        num_parties: number of parties 
+
+    Returns:
+
+
+    """    
     def partition_list(l, n):
         indices = list(range(len(l)))
         shuffle(indices)
