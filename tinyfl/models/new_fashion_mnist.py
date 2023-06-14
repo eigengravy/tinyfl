@@ -6,6 +6,8 @@ from collections import defaultdict
 from random import shuffle
 from typing import List, Tuple
 
+from torchvision import datasets, transforms
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 device = "cpu"
 
@@ -61,3 +63,19 @@ class FashionMNISTModel(nn.Module):
         correct /= size
         return 100 * correct, test_loss
 
+    @staticmethod
+    def create_datasets():
+        return (
+            datasets.FashionMNIST(
+                root="data",
+                train=True,
+                download=True,
+                transform=transforms.ToTensor(),
+            ),
+            datasets.FashionMNIST(
+                root="data",
+                train=False,
+                download=True,
+                transform=transforms.ToTensor(),
+            ),
+        )

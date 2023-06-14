@@ -17,32 +17,32 @@ models = {
     "fashion-mnist": FashionMNISTModel,
     "plant_disease": PlantDiseaseModel,
 }
-
-my_datasets = {
-    "fashion-mnist": (
-        datasets.FashionMNIST(
-            root="data",
-            train=True,
-            download=True,
-            transform=transforms.ToTensor(),
-        ),
-        datasets.FashionMNIST(
-            root="data",
-            train=False,
-            download=True,
-            transform=transforms.ToTensor(),
-        ),
-    ),
-    "plant_disease": PlantDiseaseModel.create_datasets(),
-}
-
-my_loaders = {
-    "fashion-mnist": (
-        DataLoader(my_datasets["fashion-mnist"][0], batch_size=64),
-        DataLoader(my_datasets["fashion-mnist"][1], batch_size=64),
-    ),
-    "plant_disease": PlantDiseaseModel.create_dataloaders(),
-}
+#
+# my_datasets = {
+#     "fashion-mnist": (
+#         datasets.FashionMNIST(
+#             root="data",
+#             train=True,
+#             download=True,
+#             transform=transforms.ToTensor(),
+#         ),
+#         datasets.FashionMNIST(
+#             root="data",
+#             train=False,
+#             download=True,
+#             transform=transforms.ToTensor(),
+#         ),
+#     ),
+#     "plant_disease": PlantDiseaseModel.create_datasets(),
+# }
+#
+# my_loaders = {
+#     "fashion-mnist": (
+#         DataLoader(my_datasets["fashion-mnist"][0], batch_size=64),
+#         DataLoader(my_datasets["fashion-mnist"][1], batch_size=64),
+#     ),
+#     "plant_disease": PlantDiseaseModel.create_dataloaders(),
+# }
 
 
 def fedavg_models(weights):

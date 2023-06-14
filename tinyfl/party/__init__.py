@@ -11,15 +11,15 @@ import logging
 import httpx
 import pickle
 
-from tinyfl.model import my_datasets, models, subset_from_indices
+from tinyfl.model import models, subset_from_indices
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
 
 
-# cur = "plant_disease"
-cur = "fashion-mnist"
-trainset, testset = my_datasets[cur]
+cur = "plant_disease"
+# cur = "fashion-mnist"
+trainset, testset = models[cur].create_datasets()
 
 testloader = DataLoader(testset, batch_size=batch_size)
 

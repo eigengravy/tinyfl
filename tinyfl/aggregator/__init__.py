@@ -13,7 +13,12 @@ import asyncio
 import httpx
 import logging
 
-from tinyfl.model import models, my_datasets, simple_split_dataset, stratified_split_dataset, strategies
+from tinyfl.model import (
+    models,
+    simple_split_dataset,
+    stratified_split_dataset,
+    strategies,
+)
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
@@ -68,15 +73,15 @@ round_id = 0
 # )
 #
 
-# cur = "plant_disease"
-cur = "fashion-mnist"
+cur = "plant_disease"
+# cur = "fashion-mnist"
 
-trainset, testset = my_datasets[cur]
-trainloader = DataLoader(trainset, batch_size=batch_size)
-testloader = DataLoader(testset, batch_size=batch_size)
 
 model_lock = threading.Lock()
 model = models[cur].create_model()
+trainset, testset = model.create_datasets()
+trainloader = DataLoader(trainset, batch_size=batch_size)
+testloader = DataLoader(testset, batch_size=batch_size)
 
 me = f"http://{host}:{port}"
 
@@ -162,8 +167,8 @@ async def start_training():
     round_id += 1
 
     curr_weights = copy.deepcopy(model.state_dict())
-    client_indices = simple_split_dataset(trainset, len(clients))
-    # client_indices = stratified_split_dataset(trainset, len(clients))
+    # client_indices = simple_split_dataset(trainset, len(clients))
+    client_indices = stratified_split_dataset(trainset, len(clients))
 
     async with httpx.AsyncClient() as client:
         return await asyncio.gather(
