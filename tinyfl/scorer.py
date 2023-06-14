@@ -1,12 +1,10 @@
 from tinyfl.model import create_model, test_model
 import numpy as np
-import torch
-from torch import nn
 from torch.utils.data import DataLoader
-from typing import List
+from typing import Any,List,Mapping
 
 
-def _compute_accuracy(weight: dict, testloader: Dataloader)-> float:
+def _compute_accuracy(weight:Mapping[str, Any], testloader: DataLoader)-> float:
     """
     Computes accuracy of model.
 
@@ -24,7 +22,7 @@ def _compute_accuracy(weight: dict, testloader: Dataloader)-> float:
     return test_model(model, testloader)[0]
 
 
-def accuracy_scorer(weights: list[dict], testloader: Dataloader)-> List(float):
+def accuracy_scorer(weights: List[Mapping[str, Any]], testloader: DataLoader)-> List(float):
     """Computes accuracy of models.
 
     Args:
@@ -37,7 +35,7 @@ def accuracy_scorer(weights: list[dict], testloader: Dataloader)-> List(float):
     return [_compute_accuracy(weight, testloader) for weight in weights]
 
 
-def marginal_gain_scorer(weights: List[dict], prev_scores: List[float], testloader: Dataloader)-> List[float]:
+def marginal_gain_scorer(weights: List[Mapping[str, Any]], prev_scores: List[float], testloader: DataLoader)-> List[float]:
     """Calculates marginal gain in accuracy of model
 
     Calculates increase in accuracy of model after pulling wieghts
@@ -59,7 +57,7 @@ def marginal_gain_scorer(weights: List[dict], prev_scores: List[float], testload
     ]
 
 
-def multikrum_scorer(weights: List[dict]):
+def multikrum_scorer(weights: List[Mapping[str, Any]]):
     R = len(weights)
     f = R // 3 - 1
     closest_updates = R - f - 2
