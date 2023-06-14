@@ -17,8 +17,8 @@ from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 batch_size = 64
 
 
-cur = "plant_disease"
-# cur = "fashion-mnist"
+# cur = "plant_disease"
+cur = "fashion-mnist"
 trainset, testset = my_datasets[cur]
 
 testloader = DataLoader(testset, batch_size=batch_size)
@@ -43,7 +43,7 @@ logger.info(f"{host}:{port} loaded from config.")
 me = f"http://{host}:{port}"
 msg_id = 0
 round_id = 0
-model = models["fashion-mnist"].create_model()
+model = models[cur].create_model()
 
 
 def next_msg_id() -> int:
@@ -97,7 +97,7 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
     trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
 
     logger.info("Training started")
-    model.train_model(epochs=epochs, trainloader=trainloader)
+    model.train_model(epochs, trainloader)
     # train_model(model=model, epochs=epochs, trainloader=trainloader)
     logger.info("Training ended")
 

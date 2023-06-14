@@ -7,6 +7,7 @@ from random import shuffle
 from typing import List, Tuple
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
 
 
 class FashionMNISTModel(nn.Module):

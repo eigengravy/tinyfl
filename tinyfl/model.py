@@ -59,6 +59,13 @@ strategies = {
 }
 
 
+def simple_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
+    indices = list(range(len(dataset)))
+    shuffle(indices)
+    index_partitions = [sorted(indices[i::num_parties]) for i in range(num_parties)]
+    return index_partitions
+
+
 def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[int]]:
     def partition_list(l, n):
         indices = list(range(len(l)))
