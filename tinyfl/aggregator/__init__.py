@@ -13,25 +13,10 @@ import asyncio
 import httpx
 import logging
 
-from tinyfl.model import create_model, test_model, stratified_split_dataset, strategies
+from tinyfl.model import models, my_datasets, stratified_split_dataset, strategies
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
-
-trainset = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-
-testset = datasets.FashionMNIST(
-    root="data",
-    train=False,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-testloader = DataLoader(testset, batch_size=batch_size)
 
 host: str
 port: int
@@ -67,8 +52,31 @@ msg_id = 0
 round_lock = threading.Lock()
 round_id = 0
 
+
+# trainset = datasets.FashionMNIST(
+#     root="data",
+#     train=True,
+#     download=True,
+#     transform=transforms.ToTensor(),
+# )
+#
+# testset = datasets.FashionMNIST(
+#     root="data",
+#     train=False,
+#     download=True,
+#     transform=transforms.ToTensor(),
+# )
+#
+
+cur = "plant_disease"
+# cur = "fashion-mnist"
+
+trainset, testset = my_datasets[cur]
+trainloader = DataLoader(trainset, batch_size=batch_size)
+testloader = DataLoader(testset, batch_size=batch_size)
+
 model_lock = threading.Lock()
-model = create_model()
+model = models[cur].create_model()
 
 me = f"http://{host}:{port}"
 
@@ -145,13 +153,14 @@ def state_manager():
             with clients_models_lock:
                 model.load_state_dict(strategy(client_models))
             logger.info("Aggregated model")
-            accuracy, loss = test_model(model, testloader)
+            accuracy, loss = model.test_model(testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 
 
 async def start_training():
     global round_id
     round_id += 1
+    print(type(model))
 
     curr_weights = copy.deepcopy(model.state_dict())
     client_indices = stratified_split_dataset(trainset, len(clients))
