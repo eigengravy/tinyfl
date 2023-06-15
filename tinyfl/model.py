@@ -1,11 +1,9 @@
 import torch
-from torch import nn
-from torch.utils.data import Dataset, Subset, DataLoader
-from torchvision import datasets, transforms
+from torch.utils.data import Dataset, Subset
 import copy
 from collections import defaultdict
 from random import shuffle
-from typing import List, Tuple
+from typing import List
 
 from tinyfl.models.new_fashion_mnist import FashionMNISTModel
 from tinyfl.models.plant_disease_model import (

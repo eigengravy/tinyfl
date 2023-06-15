@@ -1,10 +1,7 @@
 import torch
 from torch import nn
-from torch.utils.data import Dataset, Subset, DataLoader
-import copy
-from collections import defaultdict
-from random import shuffle
-from typing import List, Tuple
+from torch.utils.data import DataLoader
+from typing import Tuple
 
 from torchvision import datasets, transforms
 
