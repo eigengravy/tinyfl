@@ -5,42 +5,14 @@ from collections import defaultdict
 from random import shuffle
 from typing import List
 
-from tinyfl.models.new_fashion_mnist import FashionMNISTModel
-from tinyfl.models.plant_disease_model import (
-    PlantDiseaseModel,
-)
+from tinyfl.models.fashion_mnist_model import FashionMNISTModel
+from tinyfl.models.plant_disease_model import PlantDiseaseModel
 
 
 models = {
-    "fashion-mnist": FashionMNISTModel,
+    "fashion_mnist": FashionMNISTModel,
     "plant_disease": PlantDiseaseModel,
 }
-#
-# my_datasets = {
-#     "fashion-mnist": (
-#         datasets.FashionMNIST(
-#             root="data",
-#             train=True,
-#             download=True,
-#             transform=transforms.ToTensor(),
-#         ),
-#         datasets.FashionMNIST(
-#             root="data",
-#             train=False,
-#             download=True,
-#             transform=transforms.ToTensor(),
-#         ),
-#     ),
-#     "plant_disease": PlantDiseaseModel.create_datasets(),
-# }
-#
-# my_loaders = {
-#     "fashion-mnist": (
-#         DataLoader(my_datasets["fashion-mnist"][0], batch_size=64),
-#         DataLoader(my_datasets["fashion-mnist"][1], batch_size=64),
-#     ),
-#     "plant_disease": PlantDiseaseModel.create_dataloaders(),
-# }
 
 
 def fedavg_models(weights):
@@ -85,6 +57,9 @@ def stratified_split_dataset(dataset: Dataset, num_parties: int) -> List[List[in
             indices_split[i].extend(subset)
 
     return indices_split
+
+
+splits = {"simple": simple_split_dataset, "stratified": stratified_split_dataset}
 
 
 def subset_from_indices(dataset: Dataset, indices: List[int]) -> Subset:

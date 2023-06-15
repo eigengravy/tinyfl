@@ -15,8 +15,7 @@ import logging
 
 from tinyfl.model import (
     models,
-    simple_split_dataset,
-    stratified_split_dataset,
+    splits,
     strategies,
 )
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
@@ -39,12 +38,13 @@ clients = set()
 
 with open(sys.argv[1]) as f:
     config = json.load(f)
-    host, port, consensus, timeout, epochs, strategy, model = itemgetter(
-        "host", "port", "consensus", "timeout", "epochs", "strategy", "model"
+    host, port, consensus, timeout, epochs, strategy, model, split = itemgetter(
+        "host", "port", "consensus", "timeout", "epochs", "strategy", "model", "split"
     )(config)
     if strategies.get(strategy) is None:
         raise ValueError("Invalid aggregation model")
     strategy = strategies[strategy]
+    split_dataset = splits[split]
 
 logger.info(f"{host}:{port} loaded from config.")
 logger.info(f"Consensus: {consensus}")
@@ -56,24 +56,6 @@ msg_id = 0
 
 round_lock = threading.Lock()
 round_id = 0
-
-
-# trainset = datasets.FashionMNIST(
-#     root="data",
-#     train=True,
-#     download=True,
-#     transform=transforms.ToTensor(),
-# )
-#
-# testset = datasets.FashionMNIST(
-#     root="data",
-#     train=False,
-#     download=True,
-#     transform=transforms.ToTensor(),
-# )
-#
-
-
 
 model_lock = threading.Lock()
 model = models[model].create_model()
@@ -165,8 +147,7 @@ async def start_training():
     round_id += 1
 
     curr_weights = copy.deepcopy(model.state_dict())
-    # client_indices = simple_split_dataset(trainset, len(clients))
-    client_indices = stratified_split_dataset(trainset, len(clients))
+    client_indices = split_dataset(trainset, len(clients))
 
     async with httpx.AsyncClient() as client:
         return await asyncio.gather(

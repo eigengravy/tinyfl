@@ -98,7 +98,6 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
 
     logger.info("Training started")
     model.train_model(epochs, trainloader)
-    # train_model(model=model, epochs=epochs, trainloader=trainloader)
     logger.info("Training ended")
 
     r = httpx.post(
@@ -117,7 +116,6 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
 
 
 def run_testing():
-    # accuracy, loss = test_model(model, testloader)
     accuracy, loss = model.test_model(testloader)
     logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 

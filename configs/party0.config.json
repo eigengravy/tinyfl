@@ -2,5 +2,5 @@
   "host": "127.0.0.1",
   "port": 5001,
   "aggregator": "http://localhost:5000",
-  "model": "fashion-mnist"
+  "model": "plant_disease"
 }

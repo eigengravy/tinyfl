@@ -6,7 +6,6 @@ from typing import Tuple
 from torchvision import datasets, transforms
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
 
 
 class FashionMNISTModel(nn.Module):

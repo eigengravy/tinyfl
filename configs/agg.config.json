@@ -1,9 +1,10 @@
 {
-    "host": "127.0.0.1",
-    "port": 5000,
-    "consensus": 1,
-    "timeout": 1000,
-    "epochs": 3,
-    "strategy": "fedavg",
-    "model": "plant_disease"
+  "host": "127.0.0.1",
+  "port": 5000,
+  "consensus": 1,
+  "timeout": 1000,
+  "epochs": 3,
+  "strategy": "fedavg",
+  "model": "plant_disease",
+  "split": "stratified"
 }
