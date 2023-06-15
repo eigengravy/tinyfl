@@ -39,8 +39,8 @@ clients = set()
 
 with open(sys.argv[1]) as f:
     config = json.load(f)
-    host, port, consensus, timeout, epochs, strategy = itemgetter(
-        "host", "port", "consensus", "timeout", "epochs", "strategy"
+    host, port, consensus, timeout, epochs, strategy, model = itemgetter(
+        "host", "port", "consensus", "timeout", "epochs", "strategy", "model"
     )(config)
     if strategies.get(strategy) is None:
         raise ValueError("Invalid aggregation model")
@@ -73,12 +73,10 @@ round_id = 0
 # )
 #
 
-cur = "plant_disease"
-# cur = "fashion-mnist"
 
 
 model_lock = threading.Lock()
-model = models[cur].create_model()
+model = models[model].create_model()
 trainset, testset = model.create_datasets()
 trainloader = DataLoader(trainset, batch_size=batch_size)
 testloader = DataLoader(testset, batch_size=batch_size)

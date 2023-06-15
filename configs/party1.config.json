@@ -1,5 +1,6 @@
 {
   "host": "127.0.0.1",
   "port": 5002,
-  "aggregator": "http://localhost:5000"
+  "aggregator": "http://localhost:5000",
+  "model": "plant_disease"
 }

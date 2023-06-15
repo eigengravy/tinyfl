@@ -17,12 +17,6 @@ from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 batch_size = 64
 
 
-cur = "plant_disease"
-# cur = "fashion-mnist"
-trainset, testset = models[cur].create_datasets()
-
-testloader = DataLoader(testset, batch_size=batch_size)
-
 host: str
 port: int
 aggregator: str
@@ -36,14 +30,20 @@ logger = logging.getLogger(__name__)
 
 with open(sys.argv[1]) as f:
     config = json.load(f)
-    host, port, aggregator = itemgetter("host", "port", "aggregator")(config)
+    host, port, aggregator, model = itemgetter("host", "port", "aggregator", "model")(
+        config
+    )
 
 logger.info(f"{host}:{port} loaded from config.")
 
 me = f"http://{host}:{port}"
 msg_id = 0
 round_id = 0
-model = models[cur].create_model()
+model = models[model].create_model()
+
+trainset, testset = model.create_datasets()
+
+testloader = DataLoader(testset, batch_size=batch_size)
 
 
 def next_msg_id() -> int:
