@@ -3,7 +3,6 @@ from typing import List
 from fastapi import BackgroundTasks, FastAPI, Request
 from contextlib import asynccontextmanager
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
 import uvicorn
 import sys
 import json
@@ -12,24 +11,11 @@ import logging
 import httpx
 import pickle
 
-from tinyfl.model import create_model, test_model, train_model, subset_from_indices
+from tinyfl.model import models, subset_from_indices
 from tinyfl.message import DeRegister, Register, StartRound, SubmitWeights
 
 batch_size = 64
-trainset = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=True,
-    transform=transforms.ToTensor(),
-)
 
-testset = datasets.FashionMNIST(
-    root="data",
-    train=False,
-    download=True,
-    transform=transforms.ToTensor(),
-)
-testloader = DataLoader(testset, batch_size=batch_size)
 
 host: str
 port: int
@@ -44,14 +30,20 @@ logger = logging.getLogger(__name__)
 
 with open(sys.argv[1]) as f:
     config = json.load(f)
-    host, port, aggregator = itemgetter("host", "port", "aggregator")(config)
+    host, port, aggregator, model = itemgetter("host", "port", "aggregator", "model")(
+        config
+    )
 
 logger.info(f"{host}:{port} loaded from config.")
 
 me = f"http://{host}:{port}"
 msg_id = 0
 round_id = 0
-model = create_model()
+model = models[model].create_model()
+
+trainset, testset = model.create_datasets()
+
+testloader = DataLoader(testset, batch_size=batch_size)
 
 
 def next_msg_id() -> int:
@@ -105,7 +97,8 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
     trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
 
     logger.info("Training started")
-    train_model(model=model, epochs=epochs, trainloader=trainloader)
+    model.train_model(epochs, trainloader)
+    # train_model(model=model, epochs=epochs, trainloader=trainloader)
     logger.info("Training ended")
 
     r = httpx.post(
@@ -124,7 +117,8 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
 
 
 def run_testing():
-    accuracy, loss = test_model(model, testloader)
+    # accuracy, loss = test_model(model, testloader)
+    accuracy, loss = model.test_model(testloader)
     logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
 
 
