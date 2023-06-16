@@ -1,10 +1,10 @@
 import torch
 from torch.utils.data import Dataset, Subset
 import copy
+import numpy as np
 from collections import defaultdict
 from random import shuffle
 from typing import List
-
 from tinyfl.models.fashion_mnist_model import FashionMNISTModel
 from tinyfl.models.plant_disease_model import PlantDiseaseModel
 
@@ -64,3 +64,60 @@ splits = {"simple": simple_split_dataset, "stratified": stratified_split_dataset
 
 def subset_from_indices(dataset: Dataset, indices: List[int]) -> Subset:
     return Subset(dataset=dataset, indices=indices)
+
+
+# TODO: update to new models api
+def _compute_accuracy(weight, testloader):
+    model = create_model()
+    model.load_state_dict(weight)
+    return test_model(model, testloader)[0]
+
+
+def accuracy_scorer(weights, testloader):
+    return [_compute_accuracy(weight, testloader) for weight in weights]
+
+
+def marginal_gain_scorer(weights, prev_scores, testloader):
+    assert len(weights) == len(prev_scores)
+    return [
+        max(a - b, 0)
+        for a, b in zip(
+            [_compute_accuracy(weight, testloader) for weight in weights],
+            prev_scores,
+        )
+    ]
+
+
+def multikrum_scorer(weights):
+    R = len(weights)
+    f = R // 3 - 1
+    closest_updates = R - f - 2
+
+    keys = weights[0].keys()
+
+    return [
+        sum(
+            sorted(
+                [
+                    sum(
+                        [
+                            np.linalg.norm(
+                                weights[i][key].cpu() - weights[j][key].cpu()
+                            )
+                            for key in keys
+                        ]
+                    )
+                    for j in range(R)
+                    if j != i
+                ]
+            )[:closest_updates]
+        )
+        for i in range(R)
+    ]
+
+
+scorers = {
+    "accuracy": accuracy_scorer,
+    "marginal_gain": marginal_gain_scorer,
+    "multi_krum": multikrum_scorer,
+}
