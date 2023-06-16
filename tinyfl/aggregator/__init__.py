@@ -69,7 +69,7 @@ me = f"http://{host}:{port}"
 quorum = threading.Condition()
 
 clients_models_lock = threading.Lock()
-client_models = []
+client_models = dict()
 
 
 def next_msg_id() -> int:
@@ -106,14 +106,18 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case Register(url=url):
             with client_lock:
                 clients.add(url)
+            with clients_models_lock:
+                client_models[url] = None
             logger.info(f"Client {url} registered")
             return {"success": True, "message": "Registered"}
-        case SubmitWeights(round=round, weights=weights):
-            background_tasks.add_task(collect_weights, copy.deepcopy(weights))
+        case SubmitWeights(round=round, weights=weights, url=url):
+            background_tasks.add_task(collect_weights, url, copy.deepcopy(weights))
             return {"success": True, "message": "Weights submitted"}
         case DeRegister(url=url):
             with client_lock:
                 clients.remove(url)
+            with clients_models_lock:
+                del client_models[url]
             logger.info(f"Client {url} de-registered")
             return {"success": True, "message": "De-registered"}
         case _:
@@ -123,7 +127,7 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
 def state_manager():
     global client_models
     with clients_models_lock:
-        client_models = []
+        client_models = dict()
     asyncio.run(start_training())
     quorum_achieved: bool
     with quorum:
@@ -136,7 +140,9 @@ def state_manager():
         else:
             logger.info("Quorum achieved!")
             with clients_models_lock:
-                model.load_state_dict(strategy(client_models))
+                model.load_state_dict(
+                    strategy(filter(lambda x: x != None, client_models.values()))
+                )
             logger.info("Aggregated model")
             accuracy, loss = model.test_model(testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
@@ -169,15 +175,18 @@ async def start_training():
         )
 
 
-async def collect_weights(weights: Mapping[str, Any]):
+async def collect_weights(url: str, weights: Mapping[str, Any]):
     with round_lock:
         with quorum:
             with clients_models_lock:
                 notify_quorum = False
-                if len(client_models) < consensus:
-                    client_models.append(weights)
+                models_submitted = len(
+                    filter(lambda x: x != None, client_models.values())
+                )
+                if models_submitted < consensus:
+                    client_models[url] = weights
                     logger.info("Appended weights")
-                    notify_quorum = len(client_models) == consensus
+                    notify_quorum = (models_submitted + 1) == consensus
                 if notify_quorum:
                     quorum.notify()
 

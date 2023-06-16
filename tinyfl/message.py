@@ -22,6 +22,7 @@ class StartRound(Message):
 
 @dataclass
 class SubmitWeights(Message):
+    url: str
     round: int
     weights: Mapping[str, Any]
 
