@@ -18,6 +18,7 @@ class StartRound(Message):
     epochs: int
     weights: Mapping[str, Any]
     indices: List[int]
+    aggregator: str
 
 
 @dataclass
@@ -25,6 +26,13 @@ class SubmitWeights(Message):
     url: str
     round: int
     weights: Mapping[str, Any]
+    final: bool = False
+
+# TODO: Implement this using celery
+# @dataclass 
+# class StopRound(Message):
+#     pass
+    
 
 
 @dataclass

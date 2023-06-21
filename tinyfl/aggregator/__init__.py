@@ -43,6 +43,7 @@ with open(sys.argv[1]) as f:
     )(config)
     if strategies.get(strategy) is None:
         raise ValueError("Invalid aggregation model")
+    aggregator = strategy
     strategy = strategies[strategy]
     split_dataset = splits[split]
 
@@ -106,18 +107,16 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
         case Register(url=url):
             with client_lock:
                 clients.add(url)
-            with clients_models_lock:
-                client_models[url] = None
             logger.info(f"Client {url} registered")
             return {"success": True, "message": "Registered"}
-        case SubmitWeights(round=round, weights=weights, url=url):
-            background_tasks.add_task(collect_weights, url, copy.deepcopy(weights))
+        case SubmitWeights(round=round, weights=weights, url=url, final=final):
+            background_tasks.add_task(
+                collect_weights, url, copy.deepcopy(weights), final
+            )
             return {"success": True, "message": "Weights submitted"}
-        case DeRegister(url=url):
+        case DeRegister(url=url, id=id):
             with client_lock:
                 clients.remove(url)
-            with clients_models_lock:
-                del client_models[url]
             logger.info(f"Client {url} de-registered")
             return {"success": True, "message": "De-registered"}
         case _:
@@ -128,24 +127,39 @@ def state_manager():
     global client_models
     with clients_models_lock:
         client_models = dict()
+    for client in clients:
+        client_models[client] = None
     asyncio.run(start_training())
     quorum_achieved: bool
     with quorum:
         logger.info("Waiting for quorum")
         quorum_achieved = quorum.wait(timeout)
 
-        if not quorum_achieved:
+        if not quorum_achieved and aggregator != 'fedprox':
             logger.error("Quorum not achieved!")
             return
         else:
             logger.info("Quorum achieved!")
+            #TODO: stop training after aggregation
+            # asyncio.run(stop_training())
             with clients_models_lock:
                 model.load_state_dict(
-                    strategy(filter(lambda x: x != None, client_models.values()))
+                    strategy(list(filter(lambda x: x != None, client_models.values())))
                 )
             logger.info("Aggregated model")
             accuracy, loss = model.test_model(testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
+
+
+#
+# async def stop_training():
+#     async with httpx.AsyncClient() as client:
+#         return await asyncio.gather(
+#             *[
+#                 client.post(party, data=pickle.dumps(StopRound(msg_id=next_msg_id())))
+#                 for party in clients
+#             ]
+#         )
 
 
 async def start_training():
@@ -167,6 +181,7 @@ async def start_training():
                             epochs=epochs,
                             weights=curr_weights,
                             indices=indices,
+                            aggregator=aggregator,
                         )
                     ),
                 )
@@ -175,20 +190,24 @@ async def start_training():
         )
 
 
-async def collect_weights(url: str, weights: Mapping[str, Any]):
+async def collect_weights(url: str, weights: Mapping[str, Any], final: bool):
     with round_lock:
         with quorum:
             with clients_models_lock:
                 notify_quorum = False
-                models_submitted = len(
-                    filter(lambda x: x != None, client_models.values())
-                )
-                if models_submitted < consensus:
+                if aggregator == "fedavg":
+                    models_submitted = len(
+                        list(filter(lambda x: x != None, client_models.values()))
+                    )
+                    if models_submitted < consensus:
+                        client_models[url] = weights
+                        logger.info("Appended weights")
+                        notify_quorum = (models_submitted + 1) == consensus
+                    if notify_quorum:
+                        quorum.notify()
+                elif aggregator == "fedprox":
                     client_models[url] = weights
                     logger.info("Appended weights")
-                    notify_quorum = (models_submitted + 1) == consensus
-                if notify_quorum:
-                    quorum.notify()
 
 
 def main():
