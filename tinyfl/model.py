@@ -26,6 +26,7 @@ def fedavg_models(weights):
 
 strategies = {
     "fedavg": fedavg_models,
+    "fedprox": fedavg_models,
 }
 
 

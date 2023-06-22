@@ -80,14 +80,24 @@ async def ping():
 async def handle(req: Request, background_tasks: BackgroundTasks):
     msg = pickle.loads(await req.body())
     match msg:
-        case StartRound(round=round, epochs=epochs, weights=weights, indices=indices):
-            background_tasks.add_task(run_training, weights, epochs, round_id, indices)
+        case StartRound(
+            round=round,
+            epochs=epochs,
+            weights=weights,
+            indices=indices,
+            aggregator=aggregator,
+        ):
+            background_tasks.add_task(
+                run_training, weights, epochs, round_id, indices, aggregator
+            )
             return {"success": True, "message": f"Starting round {round_id}"}
+        # case StopRound():
+
         case _:
             return {"success": False, "message": "Unknown message"}
 
 
-def run_training(weights, epochs: int, round: int, indices: List[int]):
+def run_training(weights, epochs: int, round: int, indices: List[int], aggregator_strategy: str):
     global round_id
     round_id = round
 
@@ -95,24 +105,51 @@ def run_training(weights, epochs: int, round: int, indices: List[int]):
 
     train_subset = subset_from_indices(trainset, indices)
     trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
+    if aggregator_strategy == "fedavg":
 
-    logger.info("Training started")
-    model.train_model(epochs, trainloader)
-    logger.info("Training ended")
+        logger.info("Training started")
+        model.train_model(epochs, trainloader)
+        logger.info("Training ended")
 
-    r = httpx.post(
-        aggregator,
-        data=pickle.dumps(
-            SubmitWeights(
-                msg_id=next_msg_id(),
-                round=round,
-                weights=copy.deepcopy(model.state_dict()),
+        r = httpx.post(
+            aggregator,
+            data=pickle.dumps(
+                SubmitWeights(
+                    url=me,
+                    msg_id=next_msg_id(),
+                    round=round,
+                    weights=copy.deepcopy(model.state_dict()),
+                    final=False,
+                )
+            ),
+        )
+        if r.status_code == 200:
+            logger.info("Submitted weights")
+
+    elif aggregator_strategy == "fedprox":
+        logger.info("Training started")
+        # Run training
+        for i in range(epochs):
+            model.train_model(1, trainloader)
+            logger.info("Training ended")
+            final = False
+            if i == epochs - 1:
+                final = True
+
+            r = httpx.post(
+                aggregator,
+                data=pickle.dumps(
+                    SubmitWeights(
+                        url=me,
+                        msg_id=next_msg_id(),
+                        round=round,
+                        weights=copy.deepcopy(model.state_dict()),
+                        final=final,
+                    )
+                ),
             )
-        ),
-    )
-
-    if r.status_code == 200:
-        logger.info("Submitted weights")
+            if r.status_code == 200:
+                logger.info(f"Submitted weights for epoch {i}")
 
 
 def run_testing():
