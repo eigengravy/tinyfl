@@ -4,7 +4,8 @@
   "consensus": 1,
   "timeout": 30,
   "epochs": 3,
-  "strategy": "fedprox",
+  "strategy": "fedavg",
   "model": "fashion_mnist",
-  "split": "stratified"
+  "split": "stratified",
+  "super_aggregator":  "http://localhost:8000"
 }

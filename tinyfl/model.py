@@ -6,12 +6,13 @@ from collections import defaultdict
 from random import shuffle
 from typing import List
 from tinyfl.models.fashion_mnist_model import FashionMNISTModel
-from tinyfl.models.plant_disease_model import PlantDiseaseModel
+
+# from tinyfl.models.plant_disease_model import PlantDiseaseModel
 
 
 models = {
     "fashion_mnist": FashionMNISTModel,
-    "plant_disease": PlantDiseaseModel,
+    # "plant_disease": PlantDiseaseModel,
 }
 
 
