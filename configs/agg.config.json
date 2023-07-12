@@ -1,11 +1,11 @@
 {
   "host": "127.0.0.1",
   "port": 5000,
-  "consensus": 1,
+  "consensus": 2,
   "timeout": 30,
   "epochs": 3,
   "strategy": "fedavg",
   "model": "fashion_mnist",
   "split": "stratified",
-  "super_aggregator":  "http://localhost:8000"
+  "super_aggregator":  ""
 }

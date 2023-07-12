@@ -111,16 +111,18 @@ def next_msg_id() -> int:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Model initialized.")
-    r = httpx.post(
-        super_aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me))
-    )
+    if super_aggregator:
+        r = httpx.post(
+            super_aggregator, data=pickle.dumps(Register(msg_id=next_msg_id(), url=me))
+        )
     yield
     logger.info("Shutting down")
-    r = httpx.post(
-        strategy_name, data=pickle.dumps(DeRegister(msg_id=next_msg_id(), url=me))
-    )
-    if r.status_code == 200:
-        logger.info("Shutdown complete")
+    if super_aggregator:
+        r = httpx.post(
+            strategy_name, data=pickle.dumps(DeRegister(msg_id=next_msg_id(), url=me))
+        )
+        if r.status_code == 200:
+            logger.info("Shutdown complete")
 
 
 app = FastAPI(lifespan=lifespan)
@@ -199,7 +201,8 @@ def state_manager(weights: Any = None, indices: Any = None):
             logger.info("Aggregated model")
             accuracy, loss = model.test_model(testloader)
             logger.info(f"Accuracy: {(accuracy):>0.1f}%, Loss: {loss:>8f}")
-            asyncio.run(submit_model())
+            if super_aggregator:
+                asyncio.run(submit_model())
 
 
 async def submit_model():
