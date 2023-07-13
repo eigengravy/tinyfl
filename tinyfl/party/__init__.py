@@ -97,7 +97,9 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
             return {"success": False, "message": "Unknown message"}
 
 
-def run_training(weights, epochs: int, round: int, indices: List[int], aggregator_strategy: str):
+def run_training(
+    weights, epochs: int, round: int, indices: List[int], aggregator_strategy: str
+):
     global round_id
     round_id = round
 
@@ -106,7 +108,6 @@ def run_training(weights, epochs: int, round: int, indices: List[int], aggregato
     train_subset = subset_from_indices(trainset, indices)
     trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
     if aggregator_strategy == "fedavg":
-
         logger.info("Training started")
         model.train_model(epochs, trainloader)
         logger.info("Training ended")

@@ -16,6 +16,7 @@ httpx = "^0.24.0"
 [tool.poetry.scripts]
 party = "tinyfl.party:main"
 agg = "tinyfl.aggregator:main"
+sup = "tinyfl.baseline:main"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

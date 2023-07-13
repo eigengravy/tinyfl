@@ -22,17 +22,29 @@ class StartRound(Message):
 
 
 @dataclass
+class StartSuperRound(Message):
+    weights: Mapping[str, Any]
+    indices: List[List[int]]
+
+
+@dataclass
 class SubmitWeights(Message):
     url: str
     round: int
     weights: Mapping[str, Any]
     final: bool = False
 
+
+@dataclass
+class SubmitSuperWeights(Message):
+    url: str
+    weights: Mapping[str, Any]
+
+
 # TODO: Implement this using celery
-# @dataclass 
+# @dataclass
 # class StopRound(Message):
 #     pass
-    
 
 
 @dataclass
