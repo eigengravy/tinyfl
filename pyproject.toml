@@ -6,12 +6,12 @@ authors = ["Sarang S <email.sarangs@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-torch = "1.13.0"
-torchvision = "0.14.0"
-fastapi = "^0.95.1"
-uvicorn = {extras = ["standard"], version = "^0.21.1"}
-httpx = "^0.24.0"
+python = "^3.11"
+torch = "^2.2.0"
+torchvision = "^0.17.0"
+fastapi = "^0.109.2"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+httpx = "^0.26.0"
 
 [tool.poetry.scripts]
 party = "tinyfl.party:main"

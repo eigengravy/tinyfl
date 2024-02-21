@@ -43,7 +43,7 @@ model = models[model].create_model()
 
 trainset, testset = model.create_datasets()
 
-testloader = DataLoader(testset, batch_size=batch_size)
+testloader = DataLoader(testset, batch_size=batch_size, shuffle=True)
 
 
 def next_msg_id() -> int:
@@ -97,14 +97,18 @@ async def handle(req: Request, background_tasks: BackgroundTasks):
             return {"success": False, "message": "Unknown message"}
 
 
-def run_training(weights, epochs: int, round: int, indices: List[int], aggregator_strategy: str):
+def run_training(
+    weights, epochs: int, round: int, indices: List[int], aggregator_strategy: str
+):
     global round_id
     round_id = round
 
     model.load_state_dict(weights)
 
     train_subset = subset_from_indices(trainset, indices)
-    trainloader = DataLoader(train_subset, num_workers=4, batch_size=batch_size)
+    trainloader = DataLoader(
+        train_subset, num_workers=4, batch_size=batch_size, shuffle=True
+    )
     if aggregator_strategy == "fedavg":
 
         logger.info("Training started")

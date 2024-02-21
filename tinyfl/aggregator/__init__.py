@@ -61,8 +61,8 @@ round_id = 0
 model_lock = threading.Lock()
 model = models[model].create_model()
 trainset, testset = model.create_datasets()
-trainloader = DataLoader(trainset, batch_size=batch_size)
-testloader = DataLoader(testset, batch_size=batch_size)
+trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
+testloader = DataLoader(testset, batch_size=batch_size, shuffle=True)
 
 me = f"http://{host}:{port}"
 
@@ -135,12 +135,12 @@ def state_manager():
         logger.info("Waiting for quorum")
         quorum_achieved = quorum.wait(timeout)
 
-        if not quorum_achieved and aggregator != 'fedprox':
+        if not quorum_achieved and aggregator != "fedprox":
             logger.error("Quorum not achieved!")
             return
         else:
             logger.info("Quorum achieved!")
-            #TODO: stop training after aggregation
+            # TODO: stop training after aggregation
             # asyncio.run(stop_training())
             with clients_models_lock:
                 model.load_state_dict(

@@ -1,10 +1,10 @@
 {
   "host": "127.0.0.1",
   "port": 5000,
-  "consensus": 1,
-  "timeout": 30,
-  "epochs": 3,
-  "strategy": "fedprox",
+  "consensus": 2,
+  "timeout": 50,
+  "epochs": 1,
+  "strategy": "fedavg",
   "model": "fashion_mnist",
   "split": "stratified"
 }
