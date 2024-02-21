@@ -4,9 +4,9 @@ a tiny federated learning framework built with pytorch and fastapi.
 
 ## requirements
 
-- python==3.10.10
-- torch==1.13.0
-- torchvision==0.14.0
+- python
+- torch
+- torchvision
 - httpx
 - uvicorn
 - fastapi
@@ -16,7 +16,7 @@ a tiny federated learning framework built with pytorch and fastapi.
 use poetry
 
 ```sh
-poetry env use 3.10
+poetry env use 3.11
 poetry install
 ```
 
@@ -25,9 +25,9 @@ or
 use conda
 
 ```sh
-conda create -n tinyfl python=3.10.10
+conda create -n tinyfl python=3.11
 conda activate tinyfl
-pip install torch==1.13.0 torchvision==0.14.0 httpx uvicorn fastapi
+pip install torch torchvision httpx uvicorn fastapi
 ```
 
 ## quickstart
